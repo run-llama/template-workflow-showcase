@@ -4,14 +4,13 @@ import HandlerId from "@/components/handler-id";
 import { useComponentWorkflow } from "../../hooks";
 
 export default function StreamPage() {
-  const { handler, recreateHandler, failedToCreate } = useComponentWorkflow({
-    workflowName: "stream",
-  });
+  const { handler, events, recreateHandler, failedToCreate } =
+    useComponentWorkflow({
+      workflowName: "stream",
+    });
 
   // Construct text from streamed events, or use final result if available
   const { text, isComplete } = useMemo(() => {
-    const events = handler.events;
-
     // Check if we have a final result
     const stopEvent = events.find(isFullTextStopEvent);
     if (stopEvent?.data?.text) {
@@ -21,7 +20,7 @@ export default function StreamPage() {
     // Otherwise, construct from streamed words
     const streamedWords = events.filter(isWordStream).map((e) => e.data.word);
     return { text: streamedWords.join(" "), isComplete: false };
-  }, [handler.events]);
+  }, [events]);
 
   return (
     <div className="min-h-dvh aurora-container">

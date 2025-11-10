@@ -7,7 +7,7 @@ import {
   isGameSnapshot,
   PROBE_EVENT,
 } from "./events";
-import { useWorkflowHandler, WorkflowEvent } from "@llamaindex/ui";
+import { useHandler, WorkflowEvent } from "@llamaindex/ui";
 
 interface GameState {
   currentRoom: string | null;
@@ -53,10 +53,7 @@ function reduceGameState(state: GameState, event: WorkflowEvent): GameState {
   return state;
 }
 
-function getGameState(
-  handler: ReturnType<typeof useWorkflowHandler>,
-): GameState {
-  const events = handler.events;
+function getGameState(events: WorkflowEvent[]): GameState {
   const state = useMemo(
     () => events.reduce(reduceGameState, emptyGameState),
     [events],
@@ -65,24 +62,25 @@ function getGameState(
 }
 
 export default function PausePage() {
-  const { handler, recreateHandler, failedToCreate } = useExistingWorkflow({
-    workflowName: "pause",
-  });
+  const { handler, events, recreateHandler, failedToCreate } =
+    useExistingWorkflow({
+      workflowName: "pause",
+    });
 
   // Send probe event when handler loads
   useEffect(() => {
-    if (handler.handler?.handler_id) {
-      handler.sendEvent(PROBE_EVENT);
+    if (handler.state.handler_id) {
+      handler.sendEvent(PROBE_EVENT as any);
     }
-  }, [handler.handler?.handler_id]);
+  }, [handler.state.handler_id]);
 
-  const gameState = getGameState(handler);
+  const gameState = getGameState(events);
 
   const sendMove = (direction: string) => {
     handler.sendEvent({
-      type: "app.pause.workflow.PlayerMoveEvent",
-      data: { direction },
-    });
+      type: "PlayerMoveEvent",
+      value: { direction },
+    } as any);
   };
 
   const isComplete = !!gameState.result;

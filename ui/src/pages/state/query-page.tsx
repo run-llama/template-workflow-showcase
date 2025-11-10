@@ -1,48 +1,49 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWorkflowHandler, useWorkflowRun } from "@llamaindex/ui";
+import { useHandler, useWorkflow } from "@llamaindex/ui";
 import { CANCEL_EVENT, isSnapshot, isTick, TickData } from "./events";
 import { useComponentWorkflow, useExistingWorkflow } from "../../hooks";
 import { Sparkline } from "@/components/sparkline";
 import HandlerId from "@/components/handler-id";
 
 export type GetOrCreateHandlerIdResult = {
-  handler: ReturnType<typeof useWorkflowHandler>;
+  handler: ReturnType<typeof useHandler>;
   recreateHandler: () => void;
 };
 
 export default function SnapshotQueryPage() {
   // Create a new handler on page load
-  const { handler, recreateHandler, failedToCreate } = useExistingWorkflow({
-    workflowName: "snapshot_query",
-    stopEvent: CANCEL_EVENT,
-  });
+  const { handler, events, recreateHandler, failedToCreate } =
+    useExistingWorkflow({
+      workflowName: "snapshot_query",
+      stopEvent: CANCEL_EVENT as any,
+    });
 
   const maxTicks = 10;
 
   useEffect(() => {
-    if (handler.handler?.handler_id) {
+    if (handler.state.handler_id) {
       handler.sendEvent({
-        type: "app.state_query.workflow.ProbeEvent",
-        data: {
+        type: "ProbeEvent",
+        value: {
           n_ticks: maxTicks,
         },
-      });
+      } as any);
     }
-  }, [handler?.handler?.handler_id]);
+  }, [handler.state.handler_id]);
 
   const snapshot = useMemo(() => {
-    const snapshot = handler.events
+    const snapshot = events
       .filter(isSnapshot)
       .map((e) => e.data)
       .slice(-1)[0];
     return snapshot;
-  }, [handler.events]);
+  }, [events]);
 
   const ticks: TickData[] = useMemo(() => {
     const snapshotTicks = snapshot?.recent_ticks ?? [];
-    const eventTicks = handler.events.filter(isTick).map((e) => e.data);
+    const eventTicks = events.filter(isTick).map((e) => e.data);
     return snapshotTicks.concat(eventTicks);
-  }, [snapshot?.recent_ticks, handler.events]);
+  }, [snapshot?.recent_ticks, events]);
 
   const tickValues = useMemo(() => {
     return ticks.map((t) => t.value);
@@ -67,7 +68,7 @@ export default function SnapshotQueryPage() {
         </header>
         <section>
           <Sparkline
-            key={handler.handler?.handler_id}
+            key={handler.state.handler_id}
             values={tickValues}
             height={320}
             maxVisible={maxTicks}

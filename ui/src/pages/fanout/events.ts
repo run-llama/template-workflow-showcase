@@ -18,23 +18,23 @@ export type TaskCompletedData = {
 export function isBatchPlanned(
   e: UnknownEvent,
 ): e is { type: string; data: BatchPlannedData } {
-  return e.type.endsWith(".BatchPlannedEvent");
+  return e.type === "BatchPlannedEvent";
 }
 
 export function isTaskStarted(
   e: UnknownEvent,
 ): e is { type: string; data: TaskStartedData } {
-  return e.type.endsWith(".TaskStartedEvent");
+  return e.type === "TaskStartedEvent";
 }
 
 export function isTaskProgress(
   e: UnknownEvent,
 ): e is { type: string; data: TaskProgressData } {
-  return e.type.endsWith(".TaskProgressEvent");
+  return e.type === "TaskProgressEvent";
 }
 
 export function isTaskCompleted(
   e: UnknownEvent,
 ): e is { type: string; data: TaskCompletedData } {
-  return e.type.endsWith(".TaskCompletedEvent");
+  return e.type === "TaskCompletedEvent";
 }

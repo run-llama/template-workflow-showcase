@@ -1,38 +1,39 @@
 import HandlerId from "@/components/handler-id";
 import { Sparkline } from "@/components/sparkline";
-import { useWorkflowHandler } from "@llamaindex/ui";
+import { useHandler } from "@llamaindex/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useComponentWorkflow, useExistingWorkflow } from "../../hooks";
 import { CANCEL_EVENT, isTick } from "./events";
 
 export type GetOrCreateHandlerIdResult = {
-  handler: ReturnType<typeof useWorkflowHandler>;
+  handler: ReturnType<typeof useHandler>;
   recreateHandler: () => void;
 };
 
 export default function SignalPage() {
   // Keep one handler around for the lifetime of the page
-  const { handler, recreateHandler, failedToCreate } = useComponentWorkflow({
-    workflowName: "snapshot_query",
-    stopEvent: CANCEL_EVENT,
-  });
+  const { handler, events, recreateHandler, failedToCreate } =
+    useComponentWorkflow({
+      workflowName: "snapshot_query",
+      stopEvent: CANCEL_EVENT as any,
+    });
 
   const maxTicks = 10;
 
   useEffect(() => {
-    if (handler?.handler?.handler_id) {
+    if (handler.state.handler_id) {
       handler.sendEvent({
-        type: "app.state_query.workflow.ProbeEvent",
-        data: {
+        type: "ProbeEvent",
+        value: {
           n_ticks: maxTicks,
         },
-      });
+      } as any);
     }
-  }, [handler?.handler?.handler_id]);
+  }, [handler.state.handler_id]);
 
   const tickValues = useMemo(
-    () => handler.events.filter(isTick).map((e) => e.data.value),
-    [handler.events],
+    () => events.filter(isTick).map((e) => e.data.value),
+    [events],
   );
 
   const [scale, setScale] = useState(1);
@@ -40,11 +41,11 @@ export default function SignalPage() {
   const sendScaleEvent = useCallback(
     (size: number) => {
       handler.sendEvent({
-        type: "app.state_query.workflow.SignalScaleEvent",
-        data: {
+        type: "SignalScaleEvent",
+        value: {
           scale: size,
         },
-      });
+      } as any);
     },
     [handler],
   );
@@ -88,7 +89,7 @@ export default function SignalPage() {
         </header>
         <section>
           <Sparkline
-            key={handler.handler?.handler_id}
+            key={handler.state.handler_id}
             values={tickValues}
             height={320}
             maxVisible={maxTicks}

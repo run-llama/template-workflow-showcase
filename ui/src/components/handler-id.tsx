@@ -1,20 +1,20 @@
-import { useWorkflowHandler } from "@llamaindex/ui";
+import { useHandler } from "@llamaindex/ui";
 
 export default function HandlerId({
   handler,
   failedToCreate,
 }: {
-  handler: ReturnType<typeof useWorkflowHandler>;
+  handler: ReturnType<typeof useHandler>;
   failedToCreate: Error | null;
 }) {
-  const isComplete = handler.handler?.status === "complete";
-  const isError = handler.handler?.status === "failed";
+  const isComplete = handler.state.status === "completed";
+  const isError = handler.state.status === "failed";
 
   return (
     <div className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
-      {handler.handler?.handler_id ? (
+      {handler.state.handler_id ? (
         <span>
-          Handler: <code>{handler.handler?.handler_id}</code>{" "}
+          Handler: <code>{handler.state.handler_id}</code>{" "}
           {isComplete ? (
             <span className="text-green-500 ml-1">Complete</span>
           ) : isError ? (

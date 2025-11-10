@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useWorkflowRun, useWorkflowHandler } from "@llamaindex/ui";
+import { useWorkflow, useHandler } from "@llamaindex/ui";
 import {
   type UnknownEvent,
   isBatchPlanned,
@@ -22,13 +22,14 @@ type Item = {
 };
 
 export default function FanOutPage() {
-  const { handler, recreateHandler, failedToCreate } = useComponentWorkflow({
-    workflowName: "fanout",
-  });
+  const { handler, events, recreateHandler, failedToCreate } =
+    useComponentWorkflow({
+      workflowName: "fanout",
+    });
 
   const items = useMemo((): Item[] => {
     const map = new Map<number, Item>();
-    for (const e of handler.events as UnknownEvent[]) {
+    for (const e of events as UnknownEvent[]) {
       if (isBatchPlanned(e)) {
         const ids = e.data.task_ids;
         for (const id of ids) {
@@ -76,7 +77,7 @@ export default function FanOutPage() {
       }
     }
     return Array.from(map.values()).sort((a, b) => a.id - b.id);
-  }, [handler.events]);
+  }, [events]);
 
   return (
     <div className="min-h-dvh aurora-container">

@@ -1,14 +1,15 @@
 import {
-  useWorkflowHandler,
-  useWorkflowHandlerList,
-  useWorkflowRun,
+  useHandler,
+  useHandlers,
+  useWorkflow,
   WorkflowEvent,
 } from "@llamaindex/ui";
 import { useEffect, useRef, useState } from "react";
 
 export type GetOrCreateHandlerIdResult = {
   handlerId: string | null;
-  handler: ReturnType<typeof useWorkflowHandler>;
+  handler: ReturnType<typeof useHandler>;
+  events: WorkflowEvent[];
   recreateHandler: () => void;
   failedToCreate: Error | null;
 };
@@ -23,11 +24,13 @@ export function useExistingWorkflow({
   workflowName: string;
   stopEvent?: WorkflowEvent;
 }): GetOrCreateHandlerIdResult {
-  const available = useWorkflowHandlerList(workflowName);
-  const run = useWorkflowRun();
+  const available = useHandlers({
+    query: { workflow_name: [workflowName], status: ["running"] },
+  });
+  const run = useWorkflow(workflowName);
   const [isInitialized, setIsInitialized] = useState(false);
   const [handlerId, setHandlerId] = useState<string | null>(null);
-  const handler = useWorkflowHandler(handlerId ?? "", true);
+  const handler = useHandler(handlerId ?? "");
   const lastHandlerId = useRef<string | null>(null);
   const [failedToCreate, setFailedToCreate] = useState<Error | null>(null);
   useEffect(() => {
@@ -38,20 +41,20 @@ export function useExistingWorkflow({
 
   // first, fetch a handler from the existing on load.
   useEffect(() => {
-    if (!isInitialized && !available.loading) {
-      const availableHandlerId = available.handlers.find(
-        (h) => h.status === "running",
+    if (!isInitialized && !available.state.loading) {
+      const availableHandlerId = Object.values(available.state.handlers).find(
+        (h) => h.status === "running" && h.workflow_name === workflowName,
       )?.handler_id;
       setHandlerId(availableHandlerId ?? null);
       setIsInitialized(true);
     }
-  }, [isInitialized, available.loading]);
+  }, [isInitialized, available.state.loading]);
 
   // create a new handler if one doesn't exist.
   useEffect(() => {
-    if (!handlerId && !run.isCreating && isInitialized && !failedToCreate) {
+    if (!handlerId && isInitialized && !failedToCreate) {
       run
-        .runWorkflow(workflowName, {})
+        .createHandler({})
         .then((handler) => {
           setHandlerId(handler.handler_id);
         })
@@ -60,7 +63,18 @@ export function useExistingWorkflow({
           setFailedToCreate(error);
         });
     }
-  }, [handlerId, isInitialized, run.isCreating]);
+  }, [handlerId, isInitialized]);
+
+  const [events, setEvents] = useState<WorkflowEvent[]>([]);
+  useEffect(() => {
+    if (handlerId) {
+      const subscription = handler.subscribeToEvents({
+        onData: (event) => {
+          setEvents((events) => [...events, event]);
+        },
+      });
+    }
+  }, [handlerId]);
 
   // cancel old handlers when a new one is created.
   useEffect(() => {
@@ -77,6 +91,7 @@ export function useExistingWorkflow({
   return {
     handlerId: handlerId,
     handler: handler,
+    events: events,
     recreateHandler: () => {
       setHandlerId(null);
       setFailedToCreate(null);
@@ -96,22 +111,17 @@ export function useComponentWorkflow({
   workflowName: string;
   stopEvent?: WorkflowEvent;
 }): GetOrCreateHandlerIdResult {
-  const run = useWorkflowRun();
+  const run = useWorkflow(workflowName);
   const isCreating = useRef(false);
   const [handlerId, setHandlerId] = useState<string | null>(null);
-  const handler = useWorkflowHandler(handlerId ?? "", true);
+  const handler = useHandler(handlerId ?? "");
   const [failedToCreate, setFailedToCreate] = useState<Error | null>(null);
   useEffect(() => {
-    if (
-      !handlerId &&
-      !run.isCreating &&
-      !isCreating.current &&
-      !failedToCreate
-    ) {
+    if (!handlerId && !isCreating.current && !failedToCreate) {
       isCreating.current = true;
 
       run
-        .runWorkflow(workflowName, {})
+        .createHandler({})
         .then((handler) => {
           setHandlerId(handler.handler_id);
         })
@@ -123,7 +133,7 @@ export function useComponentWorkflow({
           isCreating.current = false;
         });
     }
-  }, [handlerId, run.isCreating]);
+  }, [handlerId]);
   useEffect(() => {
     return () => {
       if (handlerId && stopEvent) {
@@ -131,9 +141,24 @@ export function useComponentWorkflow({
       }
     };
   }, [handlerId]);
+  const [events, setEvents] = useState<WorkflowEvent[]>([]);
+  useEffect(() => {
+    if (handlerId) {
+      const subscription = handler.subscribeToEvents({
+        onData: (event) => {
+          setEvents((events) => [...events, event]);
+        },
+      });
+      return () => {
+        setEvents([]);
+        subscription.unsubscribe();
+      };
+    }
+  }, [handlerId]);
   return {
     handlerId: handlerId,
     handler: handler,
+    events: events,
     recreateHandler: () => {
       if (stopEvent) {
         handler.sendEvent(stopEvent);

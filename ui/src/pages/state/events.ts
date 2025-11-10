@@ -10,16 +10,17 @@ export type SnapshotData = {
 
 export function isTick(
   e: WorkflowEvent,
-): e is { type: string; data: TickData } {
-  return e.type.endsWith(".TickEvent");
+): e is { type: string; data: TickData } & WorkflowEvent {
+  return e.type === "TickEvent";
 }
 
 export function isSnapshot(
   e: WorkflowEvent,
-): e is { type: string; data: SnapshotData } {
-  return e.type.endsWith(".SnapshotEvent");
+): e is { type: string; data: SnapshotData } & WorkflowEvent {
+  return e.type === "SnapshotEvent";
 }
 
-export const CANCEL_EVENT: WorkflowEvent = {
-  type: "app.state_query.workflow.CancelEvent",
+export const CANCEL_EVENT = {
+  type: "CancelEvent",
+  value: {},
 };

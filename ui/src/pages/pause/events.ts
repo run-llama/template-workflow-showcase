@@ -17,23 +17,23 @@ export type GameSnapshotData = {
 
 export function isRoomStateEvent(
   e: WorkflowEvent,
-): e is { type: string; data: RoomStateEventData } {
-  return e.type.endsWith(".RoomStateEvent");
+): e is { type: string; data: RoomStateEventData } & WorkflowEvent {
+  return e.type === "RoomStateEvent";
 }
 
 export function isGameSnapshot(
   e: WorkflowEvent,
-): e is { type: string; data: GameSnapshotData } {
-  return e.type.endsWith(".GameSnapshotEvent");
+): e is { type: string; data: GameSnapshotData } & WorkflowEvent {
+  return e.type === "GameSnapshotEvent";
 }
 
 export function isStopEvent(
   e: WorkflowEvent,
-): e is { type: string; data: { game_over: string } } {
-  return e.type.endsWith(".GameOverEvent");
+): e is { type: string; data: { game_over: string } } & WorkflowEvent {
+  return e.type === "GameOverEvent";
 }
 
-export const PROBE_EVENT: WorkflowEvent = {
-  type: "app.pause.workflow.ProbeEvent",
-  data: {},
+export const PROBE_EVENT = {
+  type: "ProbeEvent",
+  value: {},
 };
