@@ -30,6 +30,12 @@ const showcases: Showcase[] = [
     description:
       "A maze game that pauses for player input. Demonstrates human-in-the-loop with state persistence.",
   },
+  {
+    key: "hooks-reference",
+    title: "Hooks Reference",
+    description:
+      "Live examples of useWorkflow, useHandler, useHandlers, and useWorkflows hooks.",
+  },
 ];
 
 export default function Home() {

@@ -67,13 +67,21 @@ export function useExistingWorkflow({
 
   const [events, setEvents] = useState<WorkflowEvent[]>([]);
   useEffect(() => {
-    if (handlerId) {
-      const subscription = handler.subscribeToEvents({
-        onData: (event) => {
-          setEvents((events) => [...events, event]);
-        },
-      });
+    if (!handlerId) {
+      setEvents([]);
+      return;
     }
+
+    const subscription = handler.subscribeToEvents({
+      onData: (event) => {
+        setEvents((currentEvents) => [...currentEvents, event]);
+      },
+    });
+
+    return () => {
+      setEvents([]);
+      subscription.unsubscribe();
+    };
   }, [handlerId]);
 
   // cancel old handlers when a new one is created.

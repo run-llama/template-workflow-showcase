@@ -6,6 +6,7 @@ import { ApiProvider, ApiClients, createWorkflowsClient } from "@llamaindex/ui";
 import SignalPage from "./pages/state/signal-page";
 import StreamPage from "./pages/stream/page";
 import PausePage from "./pages/pause/page";
+import HooksReferencePage from "./pages/hooks-reference/page";
 
 const deploymentName =
   import.meta.env.VITE_LLAMA_DEPLOY_DEPLOYMENT_NAME || "default";
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/stateful-signal" element={<SignalPage />} />
         <Route path="/fan-out" element={<FanOutPage />} />
         <Route path="/pause-for-input" element={<PausePage />} />
+        <Route path="/hooks-reference" element={<HooksReferencePage />} />
       </Routes>
     </ApiProvider>
   );
