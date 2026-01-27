@@ -8,6 +8,7 @@ export default defineConfig(({}) => {
   const basePath = process.env.LLAMA_DEPLOY_DEPLOYMENT_BASE_PATH;
   const projectId = process.env.LLAMA_DEPLOY_PROJECT_ID;
   const port = process.env.PORT;
+  const serverPort = process.env.LLAMA_DEPLOY_SERVER_PORT;
   return {
     plugins: [react()],
     resolve: {
@@ -20,6 +21,7 @@ export default defineConfig(({}) => {
       host: true,
       hmr: {
         port: port ? parseInt(port) : undefined,
+        clientPort: serverPort ? parseInt(serverPort) : undefined,
       },
     },
     build: {
