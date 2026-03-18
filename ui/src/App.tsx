@@ -2,7 +2,12 @@ import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import FanOutPage from "./pages/fanout/page";
 import SnapshotQueryPage from "./pages/state/query-page";
-import { ApiProvider, ApiClients, createWorkflowsClient } from "@llamaindex/ui";
+import {
+  ApiProvider,
+  ApiClients,
+  createWorkflowsClient,
+  createWorkflowsConfig,
+} from "@llamaindex/ui";
 import SignalPage from "./pages/state/signal-page";
 import StreamPage from "./pages/stream/page";
 import PausePage from "./pages/pause/page";
@@ -11,9 +16,11 @@ import HooksReferencePage from "./pages/hooks-reference/page";
 const deploymentName =
   import.meta.env.VITE_LLAMA_DEPLOY_DEPLOYMENT_NAME || "default";
 const api: ApiClients = {
-  workflowsClient: createWorkflowsClient({
-    baseUrl: `/deployments/${deploymentName}`,
-  }),
+  workflowsClient: createWorkflowsClient(
+    createWorkflowsConfig({
+      baseUrl: `/deployments/${deploymentName}`,
+    }),
+  ),
 };
 
 function BackHomeButton() {
